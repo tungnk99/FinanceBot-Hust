@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Union
 from enum import Enum
 from datetime import datetime
 
-from agents import Agent, AgentOutputSchema
+from agents import Agent, AgentOutputSchema, Runner
 from src.setting import settings
 
 # Import tất cả specialist agents
@@ -227,7 +227,7 @@ class MasterAgentOrchestrator:
         
         try:
             # Gọi Master Agent
-            result = await self.agent.run(request.query)
+            result = await Runner.run(self.agent, request.query)
             
             execution_time = time.time() - start_time
             

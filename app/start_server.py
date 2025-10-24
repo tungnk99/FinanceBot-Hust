@@ -25,7 +25,7 @@ def main():
     
     # Start server
     uvicorn.run(
-        "app.app:app",
+        "app.main:app",
         host=host,
         port=port,
         reload=reload,

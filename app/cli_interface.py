@@ -8,7 +8,7 @@ import argparse
 from typing import Optional
 from dotenv import load_dotenv
 
-from app.api_interface import FinanceBotAPI
+from api_interface import FinanceBotAPI
 from src.agents.planner_agents.master_agent import QueryType, Priority
 
 # Load environment variables

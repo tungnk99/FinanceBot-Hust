@@ -9,11 +9,9 @@ from src.agents.planner_agents.master_agent import QueryType, Priority
 class ChatRequest(BaseModel):
     """Request model for chat endpoint"""
     message: str = Field(..., description="User message/query", min_length=1)
-    query_type: Optional[QueryType] = Field(default=None, description="Type of query")
-    priority: Priority = Field(default=Priority.MEDIUM, description="Priority level")
     session_id: Optional[str] = Field(default=None, description="Session ID")
     user_id: Optional[str] = Field(default=None, description="User ID")
-    context: Optional[Dict[str, Any]] = Field(default_factory=dict, description="Additional context")
+    context: Dict[str, Any] = Field(default_factory=dict, description="Additional context")
 
 
 class StockAnalysisRequest(BaseModel):

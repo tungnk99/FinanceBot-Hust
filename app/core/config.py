@@ -45,8 +45,8 @@ class Settings(BaseSettings):
     log_file: Optional[str] = Field(default=None, env="LOG_FILE")
     
     # Monitoring Configuration
-    monitoring_provider: str = Field(default="langfuse", env="MONITORING_PROVIDER")  # langfuse, logfire, wandb, none
-    enable_monitoring: bool = Field(default=True, env="ENABLE_MONITORING")
+    monitoring_provider: str = Field(default="none", env="MONITORING_PROVIDER")  # langfuse, logfire, wandb, none
+    enable_monitoring: bool = Field(default=False, env="ENABLE_MONITORING")
     
     # Langfuse Configuration
     langfuse_public_key: Optional[str] = Field(default=None, env="LANGFUSE_PUBLIC_KEY")

@@ -13,7 +13,7 @@ This guide covers deploying FinanceBot in various environments, from local devel
 - **Storage**: 10GB free space
 - **Network**: Internet connection for external APIs
 
-### Software Requirementsgit 
+### Software Requirements
 
 - **Python**: 3.9 or higher
 - **Docker**: 20.10+ (for containerized deployment)
