@@ -37,12 +37,12 @@ install:
 # Development mode with auto-reload
 dev:
 	@echo "Starting FinanceBot FastAPI service in development mode..."
-	uvicorn app.app:app --host 0.0.0.0 --port 8000 --reload
+	PYTHONPATH=. uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
 # Production mode
 run:
 	@echo "Starting FinanceBot FastAPI service in production mode..."
-	cd app && python start_server.py
+	PYTHONPATH=. python app/start_server.py
 
 # Run all tests
 test:

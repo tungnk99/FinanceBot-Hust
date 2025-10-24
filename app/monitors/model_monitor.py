@@ -30,6 +30,30 @@ class MonitorConfig:
     service_name: str = "financebot_agent_service"
 
 
+class NoOpMonitor:
+    """No-operation monitor for when monitoring is disabled or fails"""
+    
+    def __init__(self):
+        self.is_configured = False
+        self.is_initialized = False
+        self.provider_client = None
+    
+    def setup(self) -> bool:
+        return True
+    
+    def initialize(self) -> bool:
+        return True
+    
+    def shutdown(self) -> bool:
+        return True
+    
+    def trace(self, *args, **kwargs):
+        pass
+    
+    def flush(self) -> bool:
+        return True
+
+
 class ModelMonitor:
     """Unified model monitoring and tracing system"""
     
@@ -45,6 +69,17 @@ class ModelMonitor:
         if not self.config.enabled:
             print("ℹ️  Model monitoring is disabled")
             return False
+        
+        # Check for uvloop conflict and disable monitoring if detected
+        try:
+            import asyncio
+            if hasattr(asyncio, '_get_running_loop'):
+                loop = asyncio._get_running_loop()
+                if loop and 'uvloop' in str(type(loop)):
+                    print("⚠️  Detected uvloop, disabling monitoring to avoid conflicts")
+                    return False
+        except:
+            pass
             
         if self.config.provider == MonitorProvider.LANGFUSE:
             return self._setup_langfuse()
@@ -73,9 +108,17 @@ class ModelMonitor:
                 print("⚠️  Langfuse credentials not found in settings")
                 return False
             
-            # Import Langfuse
-            from langfuse import get_client
-            import logfire
+            # Import Langfuse with error handling for uvloop conflicts
+            try:
+                from langfuse import get_client
+                import logfire
+            except Exception as e:
+                if "uvloop" in str(e).lower():
+                    print("⚠️  Langfuse setup failed due to uvloop conflict, disabling monitoring")
+                    print("   This is a known issue with uvloop and Langfuse integration")
+                    return False
+                else:
+                    raise e
             
             # Set environment variables
             os.environ["LANGFUSE_PUBLIC_KEY"] = public_key
@@ -114,8 +157,13 @@ class ModelMonitor:
                 return False
                 
         except Exception as e:
-            print(f"❌ Error setting up Langfuse: {e}")
-            return False
+            if "uvloop" in str(e).lower():
+                print("⚠️  Langfuse setup failed due to uvloop conflict, disabling monitoring")
+                print("   This is a known issue with uvloop and Langfuse integration")
+                return False
+            else:
+                print(f"❌ Error setting up Langfuse: {e}")
+                return False
     
     def _setup_logfire(self) -> bool:
         """Setup Logfire monitoring"""
@@ -284,16 +332,44 @@ class ModelMonitor:
         print("✅ Model monitor shutdown completed")
 
 
-def create_monitor(settings: Settings, provider: str = "langfuse") -> ModelMonitor:
-    """Factory function to create a model monitor"""
-    provider_enum = MonitorProvider(provider.lower()) if provider.lower() in [p.value for p in MonitorProvider] else MonitorProvider.NONE
-    
-    config = MonitorConfig(
-        provider=provider_enum,
-        enabled=getattr(settings, f'enable_{provider.lower()}', True) if provider.lower() != 'none' else False,
-        auto_init=True,
-        auto_flush=True,
-        service_name="financebot_agent_service"
-    )
-    
-    return ModelMonitor(config, settings)
+def create_monitor(settings: Settings, provider: str = "langfuse"):
+    """Factory function to create a model monitor with fallback to NoOpMonitor"""
+    try:
+        # Check if monitoring is disabled
+        if not getattr(settings, 'enable_monitoring', False):
+            print("ℹ️  Monitoring is disabled, using NoOpMonitor")
+            return NoOpMonitor()
+        
+        # Check for uvloop conflict
+        try:
+            import asyncio
+            if hasattr(asyncio, '_get_running_loop'):
+                loop = asyncio._get_running_loop()
+                if loop and 'uvloop' in str(type(loop)):
+                    print("⚠️  Detected uvloop, using NoOpMonitor to avoid conflicts")
+                    return NoOpMonitor()
+        except:
+            pass
+        
+        provider_enum = MonitorProvider(provider.lower()) if provider.lower() in [p.value for p in MonitorProvider] else MonitorProvider.NONE
+        
+        config = MonitorConfig(
+            provider=provider_enum,
+            enabled=getattr(settings, f'enable_{provider.lower()}', True) if provider.lower() != 'none' else False,
+            auto_init=True,
+            auto_flush=True,
+            service_name="financebot_agent_service"
+        )
+        
+        monitor = ModelMonitor(config, settings)
+        
+        # Try to setup the monitor
+        if monitor.setup():
+            return monitor
+        else:
+            print("⚠️  Monitor setup failed, falling back to NoOpMonitor")
+            return NoOpMonitor()
+            
+    except Exception as e:
+        print(f"⚠️  Error creating monitor: {e}, falling back to NoOpMonitor")
+        return NoOpMonitor()

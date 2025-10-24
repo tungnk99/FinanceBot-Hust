@@ -4,11 +4,11 @@ services:
   financebot:
     build: .
     ports:
-      - "8000:8000"
+      - "0.0.0.0:8000:8000"
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - MONITORING_PROVIDER=${MONITORING_PROVIDER:-langfuse}
-      - ENABLE_MONITORING=${ENABLE_MONITORING:-true}
+      - MONITORING_PROVIDER=${MONITORING_PROVIDER:-none}
+      - ENABLE_MONITORING=${ENABLE_MONITORING:-false}
       - LANGFUSE_PUBLIC_KEY=${LANGFUSE_PUBLIC_KEY}
       - LANGFUSE_SECRET_KEY=${LANGFUSE_SECRET_KEY}
       - LANGFUSE_HOST=${LANGFUSE_HOST:-https://cloud.langfuse.com}
@@ -23,10 +23,17 @@ services:
       - ENVIRONMENT=${ENVIRONMENT:-production}
     volumes:
       - ./app/.env:/financebot/app/.env
+      - ./src:/financebot/src
     restart: unless-stopped
+    networks:
+      - financebot-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+
+networks:
+  financebot-network:
+    driver: bridge

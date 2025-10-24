@@ -4,11 +4,13 @@ Chat Service - Business logic for chat operations
 from typing import Dict, Any, Optional
 from datetime import datetime
 import uuid
+import json
 
 from app.core.config import get_settings
-from app.monitors import create_monitor
-from src.agents.planner_agents.master_agent import master_agent, MasterAgentRequest, QueryType, Priority
+from app.monitors.model_monitor import create_monitor
+from src.agents.planner_agents.master_agent import master_agent, MasterAgentRequest, Priority
 from agents import Runner
+# from src.agents import Runner  # Removed - not needed
 
 
 class ChatService:
@@ -25,19 +27,15 @@ class ChatService:
     async def process_chat_message(
         self,
         message: str,
-        query_type: Optional[QueryType] = None,
-        priority: Priority = Priority.MEDIUM,
         session_id: Optional[str] = None,
         user_id: Optional[str] = None,
-        context: Optional[Dict[str, Any]] = None
+        context: Dict[str, Any] = None
     ) -> Dict[str, Any]:
         """
         Process a chat message through Master Agent
         
         Args:
             message: User message
-            query_type: Type of query
-            priority: Priority level
             session_id: Session ID
             user_id: User ID
             context: Additional context
@@ -58,16 +56,14 @@ class ChatService:
                     "message_id": message_id,
                     "session_id": session_id,
                     "user_id": user_id,
-                    "query_type": query_type.value if query_type else "auto",
-                    "priority": priority.value,
                     "message_length": len(message)
                 })
             
-            # Create master agent request
+            # Create master agent request with default values
             master_request = MasterAgentRequest(
                 query=message,
-                query_type=query_type,
-                priority=priority,
+                query_type=None,  # Auto-detect query type
+                priority=Priority.MEDIUM,  # Default priority
                 context=context,
                 user_id=user_id,
                 session_id=session_id
@@ -78,26 +74,33 @@ class ChatService:
             result = await Runner.run(master_agent, message)
             execution_time = (datetime.now() - start_time).total_seconds()
             
-            # Extract response as JSON object
+            # Extract response data
             response_data = result.final_output
             
-            # Convert to dict if it's a Pydantic model
+            # Handle different response types
             if hasattr(response_data, 'model_dump'):
-                response_data = response_data.model_dump()
+                # Pydantic model - convert to dict
+                response_dict = response_data.model_dump()
+                response_text = response_dict.get('execution_result', str(response_data))
             elif hasattr(response_data, 'dict'):
-                response_data = response_data.dict()
+                # Old Pydantic model - convert to dict
+                response_dict = response_data.dict()
+                response_text = response_dict.get('execution_result', str(response_data))
+            elif isinstance(response_data, dict):
+                # Already a dict
+                response_text = response_data.get('execution_result', str(response_data))
             else:
-                # If it's not a Pydantic model, convert to string
-                response_data = str(response_data)
+                # String or other type
+                response_text = str(response_data)
             
+            # Extract agent info if available
             selected_agent_info = None
-            
-            if hasattr(result.final_output, 'selected_agent'):
+            if hasattr(response_data, 'selected_agent') and response_data.selected_agent:
                 selected_agent_info = {
-                    "agent_name": getattr(result.final_output.selected_agent, 'agent_name', 'Unknown'),
-                    "agent_type": getattr(result.final_output.selected_agent, 'agent_type', 'Unknown'),
-                    "confidence_score": getattr(result.final_output.selected_agent, 'confidence_score', 0.0),
-                    "reasoning": getattr(result.final_output.selected_agent, 'reasoning', 'No reasoning provided')
+                    "agent_name": getattr(response_data.selected_agent, 'agent_name', 'Unknown'),
+                    "agent_type": getattr(response_data.selected_agent, 'agent_type', 'Unknown'),
+                    "confidence_score": getattr(response_data.selected_agent, 'confidence_score', 0.0),
+                    "reasoning": getattr(response_data.selected_agent, 'reasoning', 'No reasoning provided')
                 }
             
             # Log success
@@ -114,10 +117,28 @@ class ChatService:
             if self.monitor and self.monitor.is_configured:
                 self.monitor.flush()
             
+            # Ensure response is JSON serializable
+            try:
+                # Try to serialize response_text to ensure it's JSON compatible
+                if isinstance(response_text, str):
+                    # If it's a string, try to parse as JSON first
+                    try:
+                        json.loads(response_text)
+                        final_response = response_text
+                    except (json.JSONDecodeError, TypeError):
+                        # If not valid JSON, wrap it in a JSON string
+                        final_response = json.dumps({"message": response_text})
+                else:
+                    # Convert to JSON string
+                    final_response = json.dumps(response_text)
+            except Exception:
+                # Fallback to string representation
+                final_response = str(response_text)
+            
             return {
                 "success": True,
                 "message_id": message_id,
-                "response": response_data,
+                "response": final_response,
                 "selected_agent": selected_agent_info,
                 "execution_time": execution_time,
                 "session_id": session_id,
@@ -133,7 +154,7 @@ class ChatService:
                     "message_id": message_id,
                     "session_id": session_id,
                     "error": str(e),
-                    "query_type": query_type.value if query_type else "auto"
+                    "query_type": "auto"
                 })
                 self.monitor.flush()
             
@@ -175,8 +196,6 @@ class ChatService:
         
         return await self.process_chat_message(
             message=query,
-            query_type=QueryType.STOCK_RESEARCH,
-            priority=Priority.HIGH,
             context=context
         )
     
@@ -211,8 +230,6 @@ class ChatService:
         
         return await self.process_chat_message(
             message=query,
-            query_type=QueryType.QUANTITATIVE_ANALYSIS,
-            priority=Priority.MEDIUM,
             context=context
         )
     
@@ -243,8 +260,6 @@ class ChatService:
         
         return await self.process_chat_message(
             message=query,
-            query_type=QueryType.CHART_GENERATION,
-            priority=Priority.MEDIUM,
             context=context
         )
     

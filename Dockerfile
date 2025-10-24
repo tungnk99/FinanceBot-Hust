@@ -22,8 +22,11 @@ RUN useradd --create-home --shell /bin/bash financebot \
     && chown -R financebot:financebot /financebot
 USER financebot
 
-# Set working directory to app folder
-WORKDIR /financebot/app
+# Set working directory to project root
+WORKDIR /financebot
+
+# Add the project root to Python path
+ENV PYTHONPATH=/financebot
 
 # Expose port
 EXPOSE 8000
@@ -33,4 +36,4 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
 # Start command
-CMD ["python", "start_server.py"]
+CMD ["python", "app/start_server.py"]

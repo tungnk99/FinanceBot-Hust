@@ -1,0 +1,5 @@
+# FinanceBot Demo Requirements
+gradio>=4.0.0
+asyncio
+pathlib
+
