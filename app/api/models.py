@@ -3,6 +3,7 @@ API Models - Re-export schemas for backward compatibility
 """
 from app.schemas.requests import (
     ChatRequest, 
+    ChatContext,
     StockAnalysisRequest, 
     ChartRequest
 )
@@ -18,6 +19,7 @@ from app.schemas.responses import (
 # Re-export for backward compatibility
 __all__ = [
     "ChatRequest",
+    "ChatContext",
     "ChatResponse", 
     "StockAnalysisRequest",
     "ChartRequest",
