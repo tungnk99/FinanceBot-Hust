@@ -1,5 +1,4 @@
 # FinanceBot Demo Requirements
 gradio>=4.0.0
-asyncio
-pathlib
+requests>=2.25.0
 

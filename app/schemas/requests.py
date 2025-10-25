@@ -6,12 +6,18 @@ from typing import Optional, List, Dict, Any
 from src.agents.planner_agents.master_agent import QueryType, Priority
 
 
+class ChatContext(BaseModel):
+    """Context model for chat requests"""
+    deep_research: bool = Field(default=False, description="Enable deep research mode")
+    attach_files: List[str] = Field(default_factory=list, description="List of file paths to attach")
+
+
 class ChatRequest(BaseModel):
     """Request model for chat endpoint"""
     message: str = Field(..., description="User message/query", min_length=1)
-    session_id: Optional[str] = Field(default=None, description="Session ID")
-    user_id: Optional[str] = Field(default=None, description="User ID")
-    context: Dict[str, Any] = Field(default_factory=dict, description="Additional context")
+    session_id: Optional[str] = Field(default="string", description="Session ID")
+    user_id: Optional[str] = Field(default="string", description="User ID")
+    context: ChatContext = Field(default_factory=ChatContext, description="Additional context for the chat request")
 
 
 class StockAnalysisRequest(BaseModel):

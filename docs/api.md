@@ -49,25 +49,23 @@ Main chat endpoint that processes user messages through the Master Agent system.
 **Request Body:**
 ```json
 {
-  "message": "What is the current price of AAPL?",
-  "query_type": "market_search",
-  "priority": "normal",
-  "session_id": "session_123",
-  "user_id": "user_456",
+  "message": "string",
+  "session_id": "string",
+  "user_id": "string",
   "context": {
-    "preferred_language": "en",
-    "timezone": "UTC"
+    "deep_research": false,
+    "attach_files": []
   }
 }
 ```
 
 **Request Model:**
 - `message` (string, required): User's message or query
-- `query_type` (string, optional): Type of query (see Query Types below)
-- `priority` (string, optional): Request priority ("low", "normal", "high")
 - `session_id` (string, optional): Session identifier
 - `user_id` (string, optional): User identifier
 - `context` (object, optional): Additional context information
+  - `deep_research` (boolean, optional): Enable deep research mode (default: false)
+  - `attach_files` (array, optional): List of file paths to attach (default: [])
 
 **Response:**
 ```json
@@ -435,10 +433,15 @@ import json
 # Base URL
 BASE_URL = "http://localhost:8000"
 
-# Chat request
+# Chat request with new context format
 chat_response = requests.post(f"{BASE_URL}/chat", json={
-    "message": "Analyze AAPL stock",
-    "query_type": "stock_research"
+    "message": "string",
+    "session_id": "string",
+    "user_id": "string",
+    "context": {
+        "deep_research": False,
+        "attach_files": []
+    }
 })
 
 print(json.dumps(chat_response.json(), indent=2))
@@ -459,10 +462,18 @@ print(json.dumps(stock_response.json(), indent=2))
 # Health check
 curl -X GET "http://localhost:8000/health"
 
-# Chat request
+# Chat request with new context format
 curl -X POST "http://localhost:8000/chat" \
   -H "Content-Type: application/json" \
-  -d '{"message": "What is the price of AAPL?"}'
+  -d '{
+    "message": "string",
+    "session_id": "string",
+    "user_id": "string",
+    "context": {
+      "deep_research": false,
+      "attach_files": []
+    }
+  }'
 
 # Stock analysis
 curl -X POST "http://localhost:8000/analyze/stock" \
