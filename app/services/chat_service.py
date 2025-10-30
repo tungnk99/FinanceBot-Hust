@@ -88,8 +88,9 @@ class ChatService:
             )
             
             # Run master agent
+
             start_time = datetime.now()
-            result = await Runner.run(master_agent, message)
+            result = await Runner.run(master_agent, master_request.query)
             execution_time = (datetime.now() - start_time).total_seconds()
             
             # Extract response data

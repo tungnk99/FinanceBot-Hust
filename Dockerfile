@@ -25,8 +25,8 @@ USER financebot
 # Set working directory to project root
 WORKDIR /financebot
 
-# Add the project root to Python path
-ENV PYTHONPATH=/financebot
+# Add the project root to Python path (append to any existing value)
+ENV PYTHONPATH=/financebot:$PYTHONPATH
 
 # Expose port
 EXPOSE 8000

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Docker Hub configuration
-DOCKER_USERNAME="your_username"  # Thay đổi thành username Docker Hub của bạn
+DOCKER_USERNAME="tungnk1999"  # Thay đổi thành username Docker Hub của bạn
 IMAGE_NAME="financebot-hust"
 TAG="latest"
 

@@ -3,7 +3,7 @@ Configuration management for FinanceBot Multi-Agent System
 """
 import os
 from typing import Optional, List
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
 
 
@@ -87,10 +87,13 @@ class Settings(BaseSettings):
         "temperature": 0.5
     })
     
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = False
+    # Pydantic v2 settings configuration
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=False,
+        extra="ignore",  # Ignore unknown env vars like ENVIRONMENT
+    )
 
 
 # Global settings instance
