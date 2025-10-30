@@ -157,7 +157,7 @@ async def get_stock_with_technical_analysis(
         dates = hist_data.index.strftime('%Y-%m-%d').tolist()
         
         # Bước 2: Tính toán technical indicators
-        from src.tools.technical_analysis import TechnicalAnalyzer
+        from agent_libs.tools.technical_analysis import TechnicalAnalyzer
         
         analyzer = TechnicalAnalyzer()
         
@@ -418,7 +418,7 @@ async def get_stock_with_technical_analysis(
         dates = hist_data.index.strftime('%Y-%m-%d').tolist()
         
         # Bước 2: Tính toán technical indicators
-        from src.tools.technical_analysis import TechnicalAnalyzer
+        from agent_libs.tools.technical_analysis import TechnicalAnalyzer
         
         analyzer = TechnicalAnalyzer()
         
@@ -671,7 +671,7 @@ async def get_stock_with_technical_analysis(
         dates = hist_data.index.strftime('%Y-%m-%d').tolist()
         
         # Bước 2: Tính toán technical indicators
-        from src.tools.technical_analysis import TechnicalAnalyzer
+        from agent_libs.tools.technical_analysis import TechnicalAnalyzer
         
         analyzer = TechnicalAnalyzer()
         

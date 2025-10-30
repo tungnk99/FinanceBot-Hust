@@ -3,7 +3,7 @@ from typing import Optional, List, Dict, Any
 from enum import Enum
 
 from agents import Agent, AgentOutputSchema
-from src.setting import settings
+from agent_libs.setting import settings
 
 
 class InvestmentRating(str, Enum):

@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional
 
 from agents import Agent, AgentOutputSchema
-from src.setting import settings
+from agent_libs.setting import settings
 
 # Research Agent specializing in comprehensive stock analysis
 RESEARCH_PROMPT = (

@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional, Union
 from enum import Enum
 from agents import Agent, AgentOutputSchema, CodeInterpreterTool
-from src.setting import settings
+from agent_libs.setting import settings
 
 
 class ChartType(str, Enum):

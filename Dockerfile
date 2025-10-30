@@ -10,11 +10,14 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy only packaging context first for better caching
+COPY setup.py README.md requirements.txt ./
+COPY agent_libs ./agent_libs
 
-# Copy entire project
+# Install project as a package (includes agent_libs and its requirements)
+RUN pip install --no-cache-dir .
+
+# Then copy the rest of the project files
 COPY . .
 
 # Create non-root user
@@ -25,8 +28,7 @@ USER financebot
 # Set working directory to project root
 WORKDIR /financebot
 
-# Add the project root to Python path (append to any existing value)
-ENV PYTHONPATH=/financebot:$PYTHONPATH
+
 
 # Expose port
 EXPOSE 8000

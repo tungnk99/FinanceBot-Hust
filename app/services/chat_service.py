@@ -8,9 +8,8 @@ import json
 
 from app.core.config import get_settings
 from app.monitors.model_monitor import create_monitor
-from src.agents.planner_agents.master_agent import master_agent, MasterAgentRequest, Priority
+from agent_libs.agent.planner_agents.master_agent import master_agent, MasterAgentRequest, Priority
 from agents import Runner
-# from src.agents import Runner  # Removed - not needed
 
 
 class ChatService:

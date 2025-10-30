@@ -5,16 +5,15 @@ from pydantic import BaseModel, Field
 from typing import Any, Dict, List, Optional
 
 from agents import Agent, AgentOutputSchema
-from agents.model_settings import ModelSettings
-from ...tools.retrieval_tool import retrieval_tool
-from ...tools.stock_market import get_realtime_market_data
-from ..task_agent_tools import (
+from agent_libs.tools.retrieval_tool import retrieval_tool
+from agent_libs.tools.stock_market import get_realtime_market_data
+from agent_libs.agent.task_agent_tools import (
     chart_generator_agent_tool,
     quant_agent_tool,
     get_risk_agent_tool,
     writer_agent_tool
 )
-from src.setting import settings
+from agent_libs.setting import settings
 
 # Fin Doc Agent specializing in financial document analysis
 FIN_DOC_PROMPT = (
@@ -64,5 +63,4 @@ fin_doc_agent = Agent(
         get_risk_agent_tool(),
         writer_agent_tool
     ],
-    model_settings=ModelSettings(tool_choice="auto"),
 )

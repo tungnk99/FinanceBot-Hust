@@ -6,7 +6,7 @@ from typing import Optional, Dict, Any
 from dotenv import load_dotenv
 
 from app.main import FinanceBotApp
-from src.agents.planner_agents.master_agent import MasterAgentRequest, QueryType, Priority
+from agent_libs.agents.planner_agents.master_agent import MasterAgentRequest, QueryType, Priority
 
 # Load environment variables
 load_dotenv(".env", override=True)

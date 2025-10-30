@@ -1,10 +1,10 @@
 from pydantic import BaseModel
 from typing import Any, Dict, List
 from agents import Agent, AgentOutputSchema
-from src.setting import settings
-from src.logging import setup_langfuse, is_langfuse_ready
-from ...tools.stock_market import get_realtime_market_data
-from ...tools.crypto_market import get_crypto_market_data
+from agent_libs.setting import settings
+from agent_libs.logging import setup_langfuse, is_langfuse_ready
+from agent_libs.tools.stock_market import get_realtime_market_data
+from agent_libs.tools.crypto_market import get_crypto_market_data
 
 # Setup Langfuse if available
 setup_langfuse()

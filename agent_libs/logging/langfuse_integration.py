@@ -18,7 +18,7 @@ except ImportError as e:
     print(f"⚠️ Langfuse dependencies not available: {e}")
     print("   Install with: pip install langfuse logfire nest-asyncio")
 
-from src.setting import settings
+from agent_libs.setting import settings
 
 
 class LangfuseManager:

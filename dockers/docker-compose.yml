@@ -1,13 +1,11 @@
+version: '3.8'
+
 services:
   financebot:
     image: tungnk1999/financebot-hust:latest
-    build:
-      context: .
-      dockerfile: Dockerfile
     ports:
       - "0.0.0.0:8000:8000"
     environment:
-      - PYTHONPATH=/financebot
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - MONITORING_PROVIDER=${MONITORING_PROVIDER:-none}
       - ENABLE_MONITORING=${ENABLE_MONITORING:-false}
@@ -25,6 +23,7 @@ services:
       - ENVIRONMENT=${ENVIRONMENT:-production}
     volumes:
       - ./app/.env:/financebot/app/.env
+      - ./src:/financebot/src
     restart: unless-stopped
     networks:
       - financebot-network

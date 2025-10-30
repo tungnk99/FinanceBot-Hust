@@ -3,7 +3,7 @@ Request schemas for FinanceBot API
 """
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
-from src.agents.planner_agents.master_agent import QueryType, Priority
+# Removed dependency on agent_libs.agents which is not available at runtime
 
 
 class ChatContext(BaseModel):

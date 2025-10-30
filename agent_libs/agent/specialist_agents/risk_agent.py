@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from agents import Agent, AgentOutputSchema
-from src.setting import settings
+from agent_libs.setting import settings
 
 # A sub‑agent specializing in identifying risk factors or concerns.
 RISK_PROMPT = (
