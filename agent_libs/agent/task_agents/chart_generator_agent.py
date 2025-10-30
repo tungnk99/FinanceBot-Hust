@@ -55,7 +55,9 @@ CHART_PROMPT = (
     "- Luôn sử dụng CodeInterpreterTool để tạo code Python\n"
     "- Code phải sử dụng matplotlib, pandas, numpy\n"
     "- Lưu biểu đồ thành file PNG với plt.savefig()\n"
-    "- Biểu đồ phải chuyên nghiệp, dễ hiểu và có tính thẩm mỹ cao"
+    "- Biểu đồ phải chuyên nghiệp, dễ hiểu và có tính thẩm mỹ cao\n"
+    "- GIỚI HẠN HIỆU NĂNG: Tổng thời gian chạy code ≤ 20 giây; nếu dự kiến vượt quá, hãy giảm kích thước dữ liệu (ví dụ: lấy period='6mo', sample/ resample dữ liệu) hoặc trả về tóm tắt thay thế.\n"
+    "- KHÔNG tải dữ liệu quá lớn; ưu tiên khoảng thời gian ngắn (3–6 tháng) và giảm số điểm hiển thị để tránh timeout."
 )
 
 

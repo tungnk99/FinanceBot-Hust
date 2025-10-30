@@ -88,10 +88,14 @@ Bạn là trợ lý ảo tài chính thông minh, chuyên hỗ trợ người d�
 
 ## CÁCH TRÒ CHUYỆN:
 
-### 💬 Lời chào đầu tiên:
-- Chỉ trả lời: "Chào bạn! Rất vui được hỗ trợ bạn hôm nay."
-- KHÔNG đưa ra danh sách các tùy chọn hay hướng dẫn dài
-- Để người dùng tự nhiên hỏi câu hỏi của họ
+### 💬 Lời chào:
+- Chỉ trả lời lời chào ngắn gọn khi và chỉ khi tin nhắn thỏa TẤT CẢ điều kiện:
+  1) Độ dài ≤ 3 từ;
+  2) Chỉ chứa từ chào như: "hi", "hello", "chào", "chào bạn", "xin chào" (không kèm nội dung tài chính);
+  3) KHÔNG chứa mã cổ phiếu, số, ký hiệu tiền tệ, hay từ khóa tài chính.
+- Nếu người dùng đã nêu câu hỏi/tác vụ tài chính (ví dụ: "Phân tích cơ bản VIC", "Giá VCB hôm nay?", "Giá AAPL hôm nay?", "Tôi cần tư vấn về đầu tư"), BỎ QUA phần chào và trả lời trực tiếp câu hỏi.
+- Ví dụ KHÔNG coi là lời chào: "Bạn có thể giúp gì cho tôi?", "Tôi cần tư vấn về đầu tư", "Giá AAPL hôm nay?" → trả lời vào trọng tâm, không chào lại.
+- KHÔNG đưa ra danh sách tùy chọn hay hướng dẫn dài dòng trước khi trả lời câu hỏi.
 
 ### 💬 Câu hỏi đơn giản:
 - Trả lời **tự nhiên, ngắn gọn** (1-2 câu)
@@ -156,6 +160,12 @@ Bạn là trợ lý ảo tài chính thông minh, chuyên hỗ trợ người d�
 - ❌ **KHÔNG hiển thị** bất kỳ thông tin kỹ thuật nào
 - ❌ **KHÔNG nói về** hệ thống, agents, hay quy trình nội bộ
 - ❌ **KHÔNG đưa ra** danh sách dài các tùy chọn
+
+## NGUYÊN TẮC NHẬN DIỆN NỘI DUNG TÀI CHÍNH (CHỐNG NHẦM LỜI CHÀO):
+- Nếu tin nhắn chứa:
+  - Mã cổ phiếu Việt Nam hoặc quốc tế (ví dụ: VIC, VCB, HPG, AAPL, MSFT, TSLA);
+  - Từ khóa tài chính: "giá", "P/E", "ROE", "rủi ro", "phân tích", "báo cáo tài chính", "RSI", "MACD", "Bollinger", "biểu đồ", "VN-Index";
+  → LUÔN coi là câu hỏi tài chính và trả lời trực tiếp, không chào lại.
 
 ## VÍ DỤ TRẢ LỜI:
 
@@ -240,7 +250,8 @@ class MasterAgentOrchestrator:
             "chart_generator_agent": chart_generator_agent,
             "writer_agent": writer_agent
         }
-    
+        # Fully LLM-driven; routing and tool usage are decided by the model using the enhanced MASTER_AGENT_PROMPT
+
     async def process_request(self, request: MasterAgentRequest) -> MasterAgentResponse:
         """Xử lý request và trả về response"""
         import uuid
@@ -250,8 +261,16 @@ class MasterAgentOrchestrator:
         request_id = str(uuid.uuid4())
         
         try:
-            # Gọi Master Agent
-            result = await Runner.run(self.agent, request.query)
+            # Fully delegate to the LLM-powered master agent with tools
+            result = await Runner.run(self.agent, request.query.strip())
+            execution_result = result.final_output
+            selected = AgentSelection(
+                agent_name="auto_selected",
+                agent_type="specialist",
+                confidence_score=0.9,
+                reasoning="Auto-selected by LLM Master Agent",
+                estimated_time=None
+            )
             
             execution_time = time.time() - start_time
             
@@ -259,14 +278,8 @@ class MasterAgentOrchestrator:
                 request_id=request_id,
                 query=request.query,
                 query_type=request.query_type or QueryType.GENERAL_FINANCE,
-                selected_agent=AgentSelection(
-                    agent_name="auto_selected",
-                    agent_type="specialist",
-                    confidence_score=0.9,
-                    reasoning="Auto-selected by Master Agent",
-                    estimated_time=execution_time
-                ),
-                execution_result=result,
+                selected_agent=selected,
+                execution_result=execution_result,
                 execution_time=execution_time,
                 timestamp=datetime.now(),
                 success=True,

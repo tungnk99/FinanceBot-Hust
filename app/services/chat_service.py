@@ -8,7 +8,7 @@ import json
 
 from app.core.config import get_settings
 from app.monitors.model_monitor import create_monitor
-from agent_libs.agent.planner_agents.master_agent import master_agent, MasterAgentRequest, Priority
+from agent_libs.agent.planner_agents.master_agent import master_agent, MasterAgentRequest, MasterAgentOrchestrator, Priority
 from agents import Runner
 
 
@@ -86,14 +86,12 @@ class ChatService:
                 session_id=session_id
             )
             
-            # Run master agent
-
+            # Orchestrate via MasterAgentOrchestrator (core routing)
             start_time = datetime.now()
-            result = await Runner.run(master_agent, master_request.query)
+            orchestrator = MasterAgentOrchestrator()
+            orchestration = await orchestrator.process_request(master_request)
             execution_time = (datetime.now() - start_time).total_seconds()
-            
-            # Extract response data
-            response_data = result.final_output
+            response_data = orchestration.execution_result
             
             # Debug: Print response data type and content
             print(f"🔍 Response data type: {type(response_data)}")
@@ -107,11 +105,11 @@ class ChatService:
                 # Extract agent info from original response for metadata
                 agent_metadata = self._extract_agent_metadata(response_data)
                 selected_agent_info = {
-                    "agent_name": agent_metadata.get("agent_name", "FinanceBot"),
-                    "agent_type": agent_metadata.get("agent_type", "assistant"),
-                    "confidence_score": agent_metadata.get("confidence_score", 0.9),
-                    "reasoning": agent_metadata.get("reasoning", "Processed user request"),
-                    "execution_time": agent_metadata.get("execution_time", "~1-2 seconds"),
+                    "agent_name": orchestration.selected_agent.agent_name if orchestration.selected_agent else agent_metadata.get("agent_name", "FinanceBot"),
+                    "agent_type": orchestration.selected_agent.agent_type if orchestration.selected_agent else agent_metadata.get("agent_type", "assistant"),
+                    "confidence_score": orchestration.selected_agent.confidence_score if orchestration.selected_agent else agent_metadata.get("confidence_score", 0.9),
+                    "reasoning": orchestration.selected_agent.reasoning if orchestration.selected_agent else agent_metadata.get("reasoning", "Processed user request"),
+                    "execution_time": orchestration.execution_time,
                     "tools_used": agent_metadata.get("tools_used", [])
                 }
             elif isinstance(response_data, dict):
@@ -129,30 +127,49 @@ class ChatService:
                 else:
                     # Normal dict response
                     response_text = response_data.get('execution_result', str(response_data))
-                    if 'selected_agent' in response_data and response_data['selected_agent']:
-                        selected_agent_info = response_data['selected_agent']
-                    else:
-                        selected_agent_info = None
+                    selected_agent_info = {
+                        "agent_name": orchestration.selected_agent.agent_name if orchestration.selected_agent else "FinanceBot",
+                        "agent_type": orchestration.selected_agent.agent_type if orchestration.selected_agent else "assistant",
+                        "confidence_score": orchestration.selected_agent.confidence_score if orchestration.selected_agent else 0.9,
+                        "reasoning": orchestration.selected_agent.reasoning if orchestration.selected_agent else "Processed user request",
+                        "execution_time": orchestration.execution_time,
+                        "tools_used": []
+                    }
             elif hasattr(response_data, 'model_dump'):
                 # Pydantic model - convert to dict
                 response_dict = response_data.model_dump()
                 response_text = response_dict.get('execution_result', str(response_data))
-                if 'selected_agent' in response_dict and response_dict['selected_agent']:
-                    selected_agent_info = response_dict['selected_agent']
-                else:
-                    selected_agent_info = None
+                selected_agent_info = {
+                    "agent_name": orchestration.selected_agent.agent_name if orchestration.selected_agent else "FinanceBot",
+                    "agent_type": orchestration.selected_agent.agent_type if orchestration.selected_agent else "assistant",
+                    "confidence_score": orchestration.selected_agent.confidence_score if orchestration.selected_agent else 0.9,
+                    "reasoning": orchestration.selected_agent.reasoning if orchestration.selected_agent else "Processed user request",
+                    "execution_time": orchestration.execution_time,
+                    "tools_used": []
+                }
             elif hasattr(response_data, 'dict'):
                 # Old Pydantic model - convert to dict
                 response_dict = response_data.dict()
                 response_text = response_dict.get('execution_result', str(response_data))
-                if 'selected_agent' in response_dict and response_dict['selected_agent']:
-                    selected_agent_info = response_dict['selected_agent']
-                else:
-                    selected_agent_info = None
+                selected_agent_info = {
+                    "agent_name": orchestration.selected_agent.agent_name if orchestration.selected_agent else "FinanceBot",
+                    "agent_type": orchestration.selected_agent.agent_type if orchestration.selected_agent else "assistant",
+                    "confidence_score": orchestration.selected_agent.confidence_score if orchestration.selected_agent else 0.9,
+                    "reasoning": orchestration.selected_agent.reasoning if orchestration.selected_agent else "Processed user request",
+                    "execution_time": orchestration.execution_time,
+                    "tools_used": []
+                }
             else:
                 # Other type
                 response_text = str(response_data)
-                selected_agent_info = None
+                selected_agent_info = {
+                    "agent_name": orchestration.selected_agent.agent_name if orchestration.selected_agent else "FinanceBot",
+                    "agent_type": orchestration.selected_agent.agent_type if orchestration.selected_agent else "assistant",
+                    "confidence_score": orchestration.selected_agent.confidence_score if orchestration.selected_agent else 0.9,
+                    "reasoning": orchestration.selected_agent.reasoning if orchestration.selected_agent else "Processed user request",
+                    "execution_time": orchestration.execution_time,
+                    "tools_used": []
+                }
             
             # Log success
             if self.monitor and self.monitor.is_configured:
