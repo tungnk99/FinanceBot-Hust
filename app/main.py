@@ -15,6 +15,10 @@ if str(PROJECT_ROOT) not in sys.path:
 from app.api.routes import router
 from app.core.config import get_settings
 from app.monitors import create_monitor
+from agents import enable_verbose_stdout_logging
+
+enable_verbose_stdout_logging()
+
 
 # Load environment variables
 load_dotenv(".env", override=True)

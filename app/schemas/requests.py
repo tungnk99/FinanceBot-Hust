@@ -3,13 +3,54 @@ Request schemas for FinanceBot API
 """
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
+from datetime import datetime
 # Removed dependency on agent_libs.agents which is not available at runtime
+
+
+class HistoryMessage(BaseModel):
+    """History message model"""
+    role: str = Field(..., description="Message role (user/assistant)")
+    message: str = Field(..., description="Message content")
+    created_at: Optional[str] = Field(default="", description="Timestamp in ISO format")
+
+
+class AttachFile(BaseModel):
+    """Attached file model"""
+    url: str = Field(..., description="File URL")
+    filename: Optional[str] = Field(default="", description="File name")
+    mime_type: Optional[str] = Field(default="", description="MIME type")
+    sha256: Optional[str] = Field(default="", description="SHA256 hash")
+    
+    class Config:
+        extra = "allow"
+        json_schema_extra = {
+            "example": {
+                "url": "https://example.com/file.pdf",
+                "filename": "file.pdf",
+                "mime_type": "application/pdf",
+                "sha256": "1234567890"
+            }
+        }
 
 
 class ChatContext(BaseModel):
     """Context model for chat requests"""
-    deep_research: bool = Field(default=False, description="Enable deep research mode")
-    attach_files: List[str] = Field(default_factory=list, description="List of file paths to attach")
+    history: Optional[List[HistoryMessage]] = Field(default=None, description="Chat history")
+    deep_research: Optional[bool] = Field(default=False, description="Enable deep research mode")
+    attach_files: Optional[List[AttachFile]] = Field(default=None, description="List of attached files as JSON objects")
+
+    class Config:
+        extra = "allow"
+        json_schema_extra = {
+            "example": {
+                "history": [
+                    {"role": "user", "message": "What is the current price of AAPL?", "created_at": datetime.now().isoformat()},
+                    {"role": "assistant", "message": "The current price of AAPL is $150.00", "created_at": datetime.now().isoformat()}
+                ],
+                "deep_research": True,
+                "attach_files": [{"url": "https://example.com/file.pdf", "filename": "file.pdf", "mime_type": "application/pdf", "sha256": "1234567890"}]
+            }
+        }
 
 
 class ChatRequest(BaseModel):
@@ -17,7 +58,7 @@ class ChatRequest(BaseModel):
     message: str = Field(..., description="User message/query", min_length=1)
     session_id: Optional[str] = Field(default="string", description="Session ID")
     user_id: Optional[str] = Field(default="string", description="User ID")
-    context: ChatContext = Field(default_factory=ChatContext, description="Additional context for the chat request")
+    context: Optional[ChatContext] = Field(default=None, description="Additional context for the chat request")
 
 
 class StockAnalysisRequest(BaseModel):

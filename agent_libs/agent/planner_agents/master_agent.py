@@ -21,12 +21,6 @@ from agent_libs.agent.task_agents.chart_generator_agent import chart_generator_a
 from agent_libs.agent.task_agents.writer_agent import writer_agent
 # from ..task_agents.integrated_report_agent import integrated_report_agent  # Not available
 
-# Import direct tools
-from agent_libs.tools.stock_market import get_realtime_market_data
-from agent_libs.tools.crypto_market import get_crypto_market_data
-from agent_libs.tools.retrieval_tool import retrieval_tool
-from agent_libs.tools.yfinance_data import get_stock_with_technical_analysis
-
 
 class QueryType(str, Enum):
     """Các loại query mà Master Agent có thể xử lý"""
@@ -116,30 +110,29 @@ Bạn là trợ lý ảo tài chính thông minh, chuyên hỗ trợ người d�
 - "Nghiên cứu triển vọng VCB"
 - "Đánh giá tiềm năng tăng trưởng HPG"
 
-**quant_agent** - Phân tích kỹ thuật và định lượng:
-- "Phân tích kỹ thuật VIC"
-- "Tính RSI, MACD cho VCB"
-- "Bollinger Bands của HPG"
 
-**fin_doc_agent** - Đọc và phân tích báo cáo tài chính:
+**fin_doc_expert** - Đọc và phân tích báo cáo tài chính (ƯU TIÊN DÙNG KHI):
+- "Phân tích báo cáo tài chính VIC"
 - "Đọc báo cáo tài chính VIC quý 3"
 - "Phân tích báo cáo thường niên VCB"
 - "Trích xuất dữ liệu tài chính HPG"
+- "Báo cáo tài chính quý X"
+- "Phân tích bảng cân đối kế toán"
+- "Báo cáo kết quả kinh doanh"
+- "Báo cáo lưu chuyển tiền tệ"
+- Khi người dùng yêu cầu đọc, phân tích, trích xuất dữ liệu từ BÁO CÁO TÀI CHÍNH hoặc TÀI LIỆU TÀI CHÍNH
 
-**risk_agent** - Đánh giá rủi ro:
+**risk_expert** - Đánh giá rủi ro (CHỈ DÙNG KHI):
 - "Đánh giá rủi ro đầu tư VIC"
 - "Phân tích rủi ro thị trường VCB"
 - "Rủi ro thanh khoản HPG"
+- "Đánh giá rủi ro danh mục đầu tư"
+- Khi người dùng YÊU CẦU CỤ THỂ về đánh giá rủi ro, KHÔNG phải phân tích báo cáo tài chính
 
 **search_agent** - Tìm kiếm thông tin:
 - "Tìm tin tức về VIC"
 - "Thông tin thị trường chứng khoán"
 - "Cập nhật giá cổ phiếu VCB"
-
-**chart_generator_agent** - Tạo biểu đồ:
-- "Vẽ biểu đồ giá VIC 6 tháng"
-- "Tạo chart phân tích kỹ thuật VCB"
-- "Biểu đồ so sánh VIC vs VCB"
 
 **writer_agent** - Viết báo cáo:
 - "Viết báo cáo phân tích VIC"
@@ -148,7 +141,10 @@ Bạn là trợ lý ảo tài chính thông minh, chuyên hỗ trợ người d�
 
 ### Cách gọi agent:
 1. **Xác định loại yêu cầu** của người dùng
-2. **Chọn agent phù hợp** từ danh sách trên
+2. **Chọn agent phù hợp** từ danh sách trên - QUAN TRỌNG: Phân biệt rõ ràng:
+   - **fin_doc_expert**: Dùng cho phân tích BÁO CÁO TÀI CHÍNH, tài liệu tài chính, trích xuất dữ liệu từ báo cáo
+   - **risk_expert**: Dùng cho đánh giá RỦI RO cụ thể, không phải phân tích báo cáo
+   - Khi người dùng nói "phân tích báo cáo tài chính" → LUÔN dùng fin_doc_expert, KHÔNG dùng risk_expert
 3. **Gọi agent** với thông tin rõ ràng về yêu cầu
 4. **Tổng hợp kết quả** thành response tự nhiên cho người dùng
 
@@ -180,6 +176,12 @@ Bạn là trợ lý ảo tài chính thông minh, chuyên hỗ trợ người d�
 **Người dùng:** "Phân tích kỹ thuật cho VIC"
 **Bạn:** "Tôi sẽ phân tích kỹ thuật chi tiết cho VIC..." [Thực hiện phân tích và đưa ra kết quả tự nhiên]
 
+**Người dùng:** "Phân tích báo cáo tài chính VIC"
+**Bạn:** [GỌI fin_doc_expert để phân tích báo cáo tài chính, không gọi risk_expert]
+
+**Người dùng:** "Đánh giá rủi ro đầu tư VIC"
+**Bạn:** [GỌI risk_expert để đánh giá rủi ro]
+
 ## NGUYÊN TẮC:
 - Luôn trả lời như một **chuyên gia tài chính thực sự**
 - **Không bao giờ** hiển thị quá trình xử lý nội bộ
@@ -206,11 +208,11 @@ master_agent = Agent(
         ),
         fin_doc_agent.as_tool(
             tool_name="fin_doc_expert",
-            tool_description="Đọc và phân tích báo cáo tài chính, trích xuất dữ liệu"
+            tool_description="Đọc và phân tích báo cáo tài chính, trích xuất dữ liệu từ báo cáo tài chính. DÙNG KHI người dùng yêu cầu phân tích báo cáo tài chính, đọc báo cáo, trích xuất dữ liệu từ tài liệu tài chính"
         ),
         risk_agent.as_tool(
             tool_name="risk_expert",
-            tool_description="Đánh giá rủi ro toàn diện và phân tích các yếu tố rủi ro"
+            tool_description="Đánh giá rủi ro toàn diện và phân tích các yếu tố rủi ro. CHỈ DÙNG KHI người dùng yêu cầu cụ thể về đánh giá rủi ro, không phải phân tích báo cáo tài chính"
         ),
         # Task agents as tools
         search_agent.as_tool(
@@ -224,12 +226,7 @@ master_agent = Agent(
         writer_agent.as_tool(
             tool_name="writer_expert",
             tool_description="Viết báo cáo tài chính chuyên nghiệp và comprehensive analysis"
-        ),
-        # Direct tools
-        get_realtime_market_data,
-        get_crypto_market_data,
-        get_stock_with_technical_analysis,
-        retrieval_tool
+        )
     ],
     model=settings.OPENAI_MODEL,
 )
